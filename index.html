@@ -57,35 +57,35 @@
     });
 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/firebase-messaging-sw.js')
-        .then(function(registration) {
-            console.log('Service Worker Registered', registration);
+    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    .then(function(registration) {
+        console.log('Service Worker Registered', registration);
 
-            // Important: Link messaging to the Service Worker
-            messaging.useServiceWorker(registration);
+        // Informa ao Firebase Messaging para usar este Service Worker
+        messaging.useServiceWorker(registration);
 
-            // Request permission on button click
-            document.getElementById('subscribe').addEventListener('click', async () => {
-                try {
-                    const permission = await Notification.requestPermission();
-                    if (permission === 'granted') {
-                        const token = await messaging.getToken({
-                            vapidKey: "BOyQvrJPgC9d-mEncQGz93pEbhB1IghXhgln42SBx3BVhCkO6JwWMA1MSYVdCMRiA_BpspdWvnJDXgeP91o-vNA"
-                        });
-                        console.log('Token:', token);
-                        alert('Token generated! Ready to receive push notifications.');
-                    } else {
-                        console.log('Permission not granted for notifications.');
-                    }
-                } catch (error) {
-                    console.error('Error getting permission or token', error);
-                }
+        // Aqui sim: só depois que o SW está ativo é que pedimos permissão e token
+        document.getElementById('subscribe').addEventListener('click', async () => {
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+            const token = await messaging.getToken({
+                vapidKey: "BOyQvrJPgC9d-mEncQGz93pEbhB1IghXhgln42SBx3BVhCkO6JwWMA1MSYVdCMRiA_BpspdWvnJDXgeP91o-vNA"
             });
-        })
-        .catch(function(err) {
-            console.error('Service Worker registration failed', err);
+            console.log('Token:', token);
+            alert('Token gerado! Pronto para receber notificações.');
+            } else {
+            console.log('Permissão negada para notificações.');
+            }
+        } catch (error) {
+            console.error('Erro ao obter permissão ou token', error);
+        }
         });
-    }
+    })
+    .catch(function(err) {
+        console.error('Falha ao registrar Service Worker', err);
+    });
+}
 </script>
 </body>
 </html>
