@@ -1,5 +1,5 @@
 {
-    "name": "Hello PWA",
+    "name": "Hello PWA Push",
     "short_name": "PWA",
     "start_url": "/",
     "display": "standalone",

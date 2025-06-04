@@ -3,23 +3,67 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hello PWA</title>
+<title>Hello PWA with Push</title>
 
+<!-- Manifest -->
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
+
+<!-- iOS support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hello PWA">
+<link rel="apple-touch-icon" href="icon-192.png">
 
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Hello World PWA!</h1>
+<h1>Hello World PWA + Push Notifications</h1>
+<button id="subscribe">Enable Push Notification</button>
 
-    <script>
-        // Service Worker
-        if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then((reg) => console.log('Service Worker registrado.', reg))
-            .catch((err) => console.log('Erro no Service Worker.', err));
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-messaging-compat.js"></script>
+
+<script>
+    // Firebase config
+    const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // Get Firebase Messaging
+    const messaging = firebase.messaging();
+
+    // Request permission to send notifications
+    document.getElementById('subscribe').addEventListener('click', async () => {
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+        const token = await messaging.getToken({
+            vapidKey: "BOyQvrJPgC9d-mEncQGz93pEbhB1IghXhgln42SBx3BVhCkO6JwWMA1MSYVdCMRiA_BpspdWvnJDXgeP91o-vNA"
+        });
+        console.log('Token:', token);
+        alert('Token generated! Ready to receive push notifications.');
+        } else {
+        console.log('Permission not granted for notifications.');
         }
-    </script>
-    </body>
+    } catch (error) {
+        console.error('Error getting permission or token', error);
+    }
+    });
+
+    if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+        .then(reg => console.log('Service Worker (App) Registered', reg))
+        .catch(err => console.error('Service Worker registration failed', err));
+    }
+</script>
+</body>
 </html>
