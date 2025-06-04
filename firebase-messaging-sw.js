@@ -22,6 +22,7 @@ const urlsToCache = [
     '/icon-512.png'
 ];
 
+// Na instalação, abre o cache e adiciona todos os URLs do array
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
@@ -30,13 +31,17 @@ self.addEventListener('install', event => {
     );
 });
 
+// No fetch, tenta responder pelo cache; se não existir no cache, busca da rede
 self.addEventListener('fetch', event => {
     event.respondWith(
-        caches.match(event.request)
-            .then(response => response || fetch(event.request))
+    caches.match(event.request)
+        .then(response => {
+        return response || fetch(event.request);
+        })
     );
 });
 
+// Handler de push notifications
 messaging.onBackgroundMessage(payload => {
     console.log('[firebase-messaging-sw.js] Received background message ', payload);
     const notificationTitle = payload.notification.title;
@@ -44,5 +49,5 @@ messaging.onBackgroundMessage(payload => {
         body: payload.notification.body,
         icon: '/icon-192.png'
     };
-    self.registration.showNotification(notificationTitle, notificationOptions);
+    return self.registration.showNotification(notificationTitle, notificationOptions);
 });

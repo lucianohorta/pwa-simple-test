@@ -12,7 +12,7 @@
 
 <!-- iOS support -->
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Hello PWA">
 <link rel="apple-touch-icon" href="/icon-192.png">
 
@@ -58,8 +58,33 @@
 
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/firebase-messaging-sw.js')
-            .then(reg => console.log('Service Worker (Firebase Messaging) Registered', reg))
-            .catch(err => console.error('Service Worker registration failed', err));
+        .then(function(registration) {
+            console.log('Service Worker Registered', registration);
+
+            // Important: Link messaging to the Service Worker
+            messaging.useServiceWorker(registration);
+
+            // Request permission on button click
+            document.getElementById('subscribe').addEventListener('click', async () => {
+                try {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        const token = await messaging.getToken({
+                            vapidKey: "BOyQvrJPgC9d-mEncQGz93pEbhB1IghXhgln42SBx3BVhCkO6JwWMA1MSYVdCMRiA_BpspdWvnJDXgeP91o-vNA"
+                        });
+                        console.log('Token:', token);
+                        alert('Token generated! Ready to receive push notifications.');
+                    } else {
+                        console.log('Permission not granted for notifications.');
+                    }
+                } catch (error) {
+                    console.error('Error getting permission or token', error);
+                }
+            });
+        })
+        .catch(function(err) {
+            console.error('Service Worker registration failed', err);
+        });
     }
 </script>
 </body>
