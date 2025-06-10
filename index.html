@@ -54,7 +54,24 @@
                 serviceWorkerRegistration: registration
                 });
                 console.log('Token:', token);
-                alert('Notificações ativadas!');
+
+                // Envia o token pro backend
+                fetch('/api/save-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token })
+                })
+
+                .then(res => {
+                if (res.ok) {
+                    alert('Notificações ativadas e token salvo!');
+                } else {
+                    alert('Token gerado, mas houve erro ao salvar no servidor.');
+                }
+                })
+                .catch(err => {
+                console.error('Erro ao enviar token:', err);
+                });
             } else {
                 console.log('Permissão negada para notificações.');
             }
