@@ -1,18 +1,19 @@
 import admin from 'firebase-admin';
 
-if (!admin.apps.length) {
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n'); // <- ESSA LINHA É O SEGREDO
 
+if (!admin.apps.length) {
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    credential: admin.credential.cert(serviceAccount)
 });
 }
 
 const db = admin.firestore();
 
 export default async function handler(req, res) {
-if (req.method !== 'POST') return res.status(405).end();
+if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+}
 
 const { token } = req.body;
 
@@ -21,15 +22,19 @@ if (!token) {
 }
 
 try {
-    const exists = await db.collection('tokens').where('token', '==', token).get();
+    const ref = db.collection('tokens');
+    const exists = await ref.where('token', '==', token).get();
+
     if (exists.empty) {
-    await db.collection('tokens').add({ token });
-    return res.status(200).json({ success: true });
+    await ref.add({ token });
+    console.log('Token salvo:', token);
     } else {
-    return res.status(200).json({ success: true, message: 'Token já salvo' });
+    console.log('Token já existente:', token);
     }
+
+    return res.status(200).json({ success: true });
 } catch (err) {
-    console.error('Erro ao salvar token:', err);
-    return res.status(500).json({ error: 'Erro interno ao salvar token' });
+    console.error('Erro interno ao salvar token:', err);
+    return res.status(500).json({ error: err.message || 'Erro interno ao salvar token.' });
 }
 }
