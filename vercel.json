@@ -1,13 +1,9 @@
 {
-"cleanUrls": true,
-"rewrites": [
-    {
-    "source": "/firebase-messaging-sw.js",
-    "destination": "/firebase-messaging-sw.js"
-    },
-    {
-    "source": "/",
-    "destination": "/index.html"
-    }
-]
+    "cleanUrls": true,
+    "rewrites": [
+        {
+        "source": "/firebase-messaging-sw.js",
+        "destination": "/firebase-messaging-sw.js"
+        }
+    ]
 }

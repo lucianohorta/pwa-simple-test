@@ -1,54 +1,48 @@
-import admin from "firebase-admin";
+importScripts('https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.6.11/firebase-messaging-compat.js');
 
-// Evita re-inicialização no Vercel a cada request
-if (!admin.apps.length) {
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+firebase.initializeApp({
+apiKey: "AIzaSyBk_c4KxIWghSZYWiTesJP4Ho9XXdp4XWs",
+authDomain: "pwa-ios-bba82.firebaseapp.com",
+projectId: "pwa-ios-bba82",
+storageBucket: "pwa-ios-bba82.appspot.com",
+messagingSenderId: "894142973830",
+appId: "1:894142973830:web:2f124ebbd5e183b7b58e07"
 });
-}
 
-const db = admin.firestore();
+const messaging = firebase.messaging();
 
-export default async function handler(req, res) {
-res.setHeader("Access-Control-Allow-Origin", "*");
-res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+// Push notification handler
+messaging.onBackgroundMessage((payload) => {
+console.log('[firebase-messaging-sw.js] Mensagem em segundo plano recebida:', payload);
 
-if (req.method === "OPTIONS") {
-    return res.status(200).end();
-}
+const notificationTitle = payload.notification?.title || 'Lembrete';
+const notificationOptions = {
+    body: payload.notification?.body || 'Você tem um novo lembrete!',
+    icon: '/icon-192.png'
+};
 
-if (req.method !== "POST") {
-    return res.status(405).json({ error: "Método não permitido" });
-}
+self.registration.showNotification(notificationTitle, notificationOptions);
+});
 
-try {
-    const snapshot = await db.collection("tokens").get();
-    const tokens = snapshot.docs.map((doc) => doc.data().token);
+// Cache básico 
+const CACHE_NAME = 'pwa-lembretes-v1';
+const urlsToCache = [
+'/',
+'/index.html',
+'/style.css',
+'/icon-192.png',
+'/icon-512.png'
+];
 
-    if (!tokens.length) {
-    return res.status(200).json({ message: "Nenhum token encontrado." });
-    }
+self.addEventListener('install', (event) => {
+event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+);
+});
 
-    const message = {
-    notification: {
-        title: "Lembrete diário",
-        body: "Hora de se hidratar e revisar seus planos!",
-    },
-    tokens: tokens,
-    };
-
-    const response = await admin.messaging().sendMulticast(message);
-
-    return res.status(200).json({
-    successCount: response.successCount,
-    failureCount: response.failureCount,
-    responses: response.responses,
-    });
-} catch (err) {
-    console.error("Erro ao enviar notificações:", err);
-    return res.status(500).json({ error: "Erro interno ao enviar notificações." });
-}
-}
+self.addEventListener('fetch', (event) => {
+event.respondWith(
+    caches.match(event.request).then((response) => response || fetch(event.request))
+);
+});
