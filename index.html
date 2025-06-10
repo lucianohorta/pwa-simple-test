@@ -1,70 +1,48 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hello PWA with Push</title>
-
-<!-- Manifest -->
+<title>Lembretes Diários PWA</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/icon-192.png">
 
 <!-- iOS support -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Hello PWA">
+<meta name="apple-mobile-web-app-title" content="Lembretes">
 <link rel="apple-touch-icon" href="/icon-192.png">
 
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<h1>Hello World PWA + Push Notifications</h1>
-<button id="subscribe">Enable Push Notification</button>
+<h1>Lembretes Diários</h1>
+<p>Receba um lembrete por notificação push todos os dias!</p>
+<button id="subscribe">Ativar Notificações</button>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-messaging-compat.js"></script>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyBk_c4KxIWghSZYWiTesJP4Ho9XXdp4XWs",
-        authDomain: "pwa-ios-bba82.firebaseapp.com",
-        projectId: "pwa-ios-bba82",
-        storageBucket: "pwa-ios-bba82.firebasestorage.app",
-        messagingSenderId: "894142973830",
-        appId: "1:894142973830:web:2f124ebbd5e183b7b58e07",
-        measurementId: "G-5R46BB6M38"
-    };
+const firebaseConfig = {
+    apiKey: "AIzaSyBk_c4KxIWghSZYWiTesJP4Ho9XXdp4XWs",
+    authDomain: "pwa-ios-bba82.firebaseapp.com",
+    projectId: "pwa-ios-bba82",
+    storageBucket: "pwa-ios-bba82.firebasestorage.app",
+    messagingSenderId: "894142973830",
+    appId: "1:894142973830:web:2f124ebbd5e183b7b58e07",
+    measurementId: "G-5R46BB6M38"
+};
 
-    firebase.initializeApp(firebaseConfig);
-    const messaging = firebase.messaging();
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
 
-    document.getElementById('subscribe').addEventListener('click', async () => {
-        try {
-            const permission = await Notification.requestPermission();
-            if (permission === 'granted') {
-                const token = await messaging.getToken({
-                    vapidKey: "BOyQvrJPgC9d-mEncQGz93pEbhB1IghXhgln42SBx3BVhCkO6JwWMA1MSYVdCMRiA_BpspdWvnJDXgeP91o-vNA"
-                });
-                console.log('Token:', token);
-                alert('Token generated! Ready to receive push notifications.');
-            } else {
-                console.log('Permission not granted for notifications.');
-            }
-        } catch (error) {
-            console.error('Error getting permission or token', error);
-        }
-    });
-
-    if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/firebase-messaging-sw.js')
     .then(function(registration) {
-        console.log('Service Worker Registered', registration);
-
-        // Informa ao Firebase Messaging para usar este Service Worker
+        console.log('Service Worker registrado com sucesso', registration);
         messaging.useServiceWorker(registration);
 
-        // Aqui sim: só depois que o SW está ativo é que pedimos permissão e token
         document.getElementById('subscribe').addEventListener('click', async () => {
         try {
             const permission = await Notification.requestPermission();
@@ -73,17 +51,17 @@
                 vapidKey: "BOyQvrJPgC9d-mEncQGz93pEbhB1IghXhgln42SBx3BVhCkO6JwWMA1MSYVdCMRiA_BpspdWvnJDXgeP91o-vNA"
             });
             console.log('Token:', token);
-            alert('Token gerado! Pronto para receber notificações.');
+            alert('Notificações ativadas!');
             } else {
             console.log('Permissão negada para notificações.');
             }
         } catch (error) {
-            console.error('Erro ao obter permissão ou token', error);
+            console.error('Erro ao ativar notificações', error);
         }
         });
     })
     .catch(function(err) {
-        console.error('Falha ao registrar Service Worker', err);
+        console.error('Erro ao registrar o Service Worker', err);
     });
 }
 </script>
