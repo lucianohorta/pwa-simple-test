@@ -2,7 +2,11 @@ import admin from 'firebase-admin';
 
 if (!admin.apps.length) {
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n'); // <- ESSA LINHA É O SEGREDO
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+});
 }
 
 const db = admin.firestore();
