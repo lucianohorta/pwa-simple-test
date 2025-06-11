@@ -1,22 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Hello World PWA + Push Notifications</title>
-
-<!-- Manifest -->
-<link rel="manifest" href="/manifest.json" />
-<link rel="icon" href="/icon-192.png" />
-<link rel="apple-touch-icon" href="/icon-192.png" />
-
-<!-- PWA meta -->
-<meta name="theme-color" content="#ffffff" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-<meta name="apple-mobile-web-app-title" content="Lembretes" />
-
-<link rel="stylesheet" href="/style.css" />
+<!-- Your existing head content -->
 </head>
 <body>
 <h1>Hello World PWA + Push Notifications</h1>
@@ -28,75 +13,75 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-messaging-compat.js"></script>
 
 <script>
+    document.addEventListener('DOMContentLoaded', () => {
     const firebaseConfig = {
         apiKey: "AIzaSyBk_c4KxIWghSZYWiTesJP4Ho9XXdp4XWs",
         authDomain: "pwa-ios-bba82.firebaseapp.com",
         projectId: "pwa-ios-bba82",
         storageBucket: "pwa-ios-bba82.firebasestorage.app",
         messagingSenderId: "894142973830",
-        appId: "1:894142973830:web:2f124ebbd5e183b7b58e07",
-        measurementId: "G-5R46BB6M38"
+        appId: "1:894142973830:web:2f124ebbd5e183b7b58e07"
     };
 
     // Initialize Firebase
     const app = firebase.initializeApp(firebaseConfig);
-    const messaging = firebase.messaging();
-
-    // Handle push subscription
-    document.getElementById('subscribe').addEventListener('click', async () => {
-    try {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-        const token = await messaging.getToken();
-        document.getElementById('status').textContent = 'Registering device...';
-        
-        // Send token to backend
-        const response = await fetch('/api/save-token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token })
-        });
-        
-        if (response.ok) {
-            document.getElementById('status').textContent = 'Push notifications enabled!';
-        } else {
-            document.getElementById('status').textContent = 'Failed to register device';
-        }
-        } else {
-        document.getElementById('status').textContent = 'Notification permission denied';
-        }
-    } catch (error) {
-        console.error('Error enabling push notifications:', error);
-        document.getElementById('status').textContent = 'Error: ' + error.message;
-    }
-    });
-
-    // Handle foreground messages
-    messaging.onMessage((payload) => {
-    console.log('Message received in foreground:', payload);
-    const notificationTitle = payload.notification?.title || 'New message';
-    const notificationOptions = {
-        body: payload.notification?.body || 'You have a new notification',
-        icon: '/icon-192.png'
-    };
-    
-    if (Notification.permission === 'granted') {
-        new Notification(notificationTitle, notificationOptions);
-    }
-    });
+    const messaging = firebase.messaging(app);
+    const statusElement = document.getElementById('status');
 
     // Register service worker
     if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
         navigator.serviceWorker.register('/firebase-messaging-sw.js')
-        .then((registration) => {
-            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        .then(registration => {
+            console.log('SW registered');
+            
+            // Handle button click
+            document.getElementById('subscribe').addEventListener('click', async () => {
+            try {
+                // Request permission
+                const permission = await Notification.requestPermission();
+                
+                if (permission === 'granted') {
+                statusElement.textContent = 'Getting token...';
+                
+                // Get FCM token
+                const token = await messaging.getToken({
+                    serviceWorkerRegistration: registration,
+                    vapidKey: "BOyQvrJPgC9d-mEncQGz93pEbhB1IghXhgln42SBx3BVhCkO6JwWMA1MSYVdCMRiA_BpspdWvnJDXgeP91o-vNA"
+                });
+                
+                statusElement.textContent = 'Token received!';
+                console.log('FCM Token:', token);
+                
+                // Send token to your backend
+                const response = await fetch('/api/save-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token })
+                });
+                
+                if (response.ok) {
+                    statusElement.textContent = 'Push notifications enabled!';
+                } else {
+                    statusElement.textContent = 'Failed to save token';
+                }
+                } else {
+                statusElement.textContent = 'Permission denied';
+                console.warn('Notification permission:', permission);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                statusElement.textContent = 'Error: ' + error.message;
+            }
+            });
         })
-        .catch((err) => {
-            console.error('ServiceWorker registration failed: ', err);
+        .catch(error => {
+            console.error('SW registration failed:', error);
+            statusElement.textContent = 'Service worker failed to register';
         });
-    });
+    } else {
+        statusElement.textContent = 'Service workers not supported';
     }
+    });
 </script>
 </body>
 </html>
