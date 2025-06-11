@@ -36,33 +36,39 @@ app.use(bodyParser.json());
 
 // API Endpoints
 app.post('/api/save-token', async (req, res) => {
-    console.log("Received request to save token");
-
-    const { token } = req.body;
-    if (!token) {
-        console.error("Token missing in request");
-        return res.status(400).json({ error: 'Token is required' });
-    }
-
     try {
+        const { token } = req.body;
+        
+        if (!token) {
+        return res.status(400).json({ 
+            error: 'Token is required',
+            details: 'No FCM token was provided in the request body'
+        });
+        }
+
         const tokensRef = db.collection('tokens');
         const existing = await tokensRef.where('token', '==', token).get();
 
         if (existing.empty) {
         await tokensRef.add({ 
             token,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            userAgent: req.headers['user-agent'] || 'unknown'
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
         console.log("New token saved:", token);
-        } else {
-        console.log("Token already exists:", token);
         }
 
-        res.status(200).json({ success: true });
+        res.status(200).json({ 
+        success: true,
+        message: 'Token processed successfully'
+        });
+        
     } catch (err) {
-        console.error('Error saving token:', err);
-        res.status(500).json({ error: err.message || 'Internal server error' });
+        console.error('Database error:', err);
+        res.status(500).json({ 
+        error: 'Failed to save token',
+        details: err.message,
+        type: err.name
+        });
     }
 });
 
