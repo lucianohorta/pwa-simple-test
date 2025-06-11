@@ -59,6 +59,7 @@
             }
 
             statusEl.textContent = "Generating token...";
+            await messaging.deleteToken(); // força renovação
             const token = await messaging.getToken({
                 serviceWorkerRegistration: await navigator.serviceWorker.ready,
                 vapidKey: "BOyQvrJPgC9d-mEncQGz93pEbhB1IghXhgln42SBx3BVhCkO6JwWMA1MSYVdCMRiA_BpspdWvnJDXgeP91o-vNA"
