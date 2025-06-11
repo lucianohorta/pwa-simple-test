@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import admin from 'firebase-admin';
+import 'dotenv/config';
 
 const app = express();
 app.use(cors());
@@ -35,6 +36,13 @@ try {
     res.status(500).json({ error: error.message });
 }
 });
+
+console.log({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKeyExists: !!process.env.FIREBASE_PRIVATE_KEY
+});
+
 
 // Vercel requires module.exports for serverless
 export default app;
