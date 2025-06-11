@@ -24,10 +24,13 @@ try {
     return res.status(400).json({ error: 'Token required' });
     }
 
+    const existing = await db.collection('tokens').where('token', '==', token).get();
+    if (existing.empty) {
     await db.collection('tokens').add({
-    token,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        token,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+    }
 
     return res.status(200).json({ success: true });
 } catch (error) {
