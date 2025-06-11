@@ -1,111 +1,40 @@
-app.use(cors({
-    origin: true,
-    credentials: true
-}));
-
 import express from 'express';
-import admin from 'firebase-admin';
 import cors from 'cors';
-import bodyParser from 'body-parser';
-import { readFileSync } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import admin from 'firebase-admin';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-// Initialize Firebase Admin
-const serviceAccount = JSON.parse(
-readFileSync(path.join(__dirname, 'service-account.json'), 'utf-8')
-);
-
+// Initialize Firebase Admin using env variables
 admin.initializeApp({
-credential: admin.credential.cert(serviceAccount),
-databaseURL: `https://pwa-ios-bba82.firebaseio.com`
+    credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'), // Fix newline chars
+    }),
+    databaseURL: process.env.FIREBASE_DATABASE_URL,
 });
 
 const db = admin.firestore();
 
-// Create Express app
-const app = express();
-const port = process.env.PORT || 3000;
-
-// Middleware
-app.use(cors());
-app.use(bodyParser.json());
-
-// API Endpoints
+// Save token endpoint
 app.post('/api/save-token', async (req, res) => {
-    try {
-        const { token } = req.body;
-        
-        if (!token) {
-        return res.status(400).json({ 
-            error: 'Token is required',
-            details: 'No FCM token was provided in the request body'
-        });
-        }
+try {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ error: 'Token required' });
 
-        const tokensRef = db.collection('tokens');
-        const existing = await tokensRef.where('token', '==', token).get();
+    await db.collection('tokens').add({
+    token,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
 
-        if (existing.empty) {
-        await tokensRef.add({ 
-            token,
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-        console.log("New token saved:", token);
-        }
-
-        res.status(200).json({ 
-        success: true,
-        message: 'Token processed successfully'
-        });
-        
-    } catch (err) {
-        console.error('Database error:', err);
-        res.status(500).json({ 
-        error: 'Failed to save token',
-        details: err.message,
-        type: err.name
-        });
-    }
+    res.json({ success: true });
+} catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
+}
 });
 
-app.post('/api/send-to-all', async (req, res) => {
-    try {
-        const { title, body } = req.body;
-        
-        if (!title || !body) {
-        return res.status(400).json({ error: 'Title and body are required' });
-        }
-
-        const snapshot = await db.collection('tokens').get();
-        const tokens = snapshot.docs.map(doc => doc.data().token);
-
-        if (tokens.length === 0) {
-        return res.status(200).json({ message: 'No devices registered' });
-        }
-
-        const message = {
-        notification: { title, body },
-        tokens
-        };
-
-        const response = await admin.messaging().sendMulticast(message);
-        
-        res.status(200).json({ 
-        success: response.successCount, 
-        failure: response.failureCount,
-        responses: response.responses
-        });
-    } catch (err) {
-        console.error('Error sending notifications:', err);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Start server
-app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
-});
+// Vercel requires module.exports for serverless
+export default app;

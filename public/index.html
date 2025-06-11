@@ -23,6 +23,7 @@
     <div id="error-details"></div>
 
     <!-- Firebase SDKs -->
+    <script src="/config.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-messaging-compat.js"></script>
 
@@ -38,8 +39,8 @@
         };
 
         // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const messaging = firebase.messaging(app);
+        const app = firebase.initializeApp(window.firebaseConfig);
+        const messaging = firebase.messaging();
         const statusEl = document.getElementById('status');
         const subscribeBtn = document.getElementById('subscribe');
 
