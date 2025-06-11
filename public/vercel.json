@@ -11,12 +11,22 @@
     "src": "/api/save-token",
     "dest": "notifier/index.js",
     "methods": ["POST"]
+    },
+    {
+    "src": "/api/send-to-all",
+    "dest": "notifier/index.js",
+    "methods": ["POST"]
     }
 ],
-"env": {
-    "FIREBASE_PROJECT_ID": "pwa-ios-bba82",
-    "FIREBASE_CLIENT_EMAIL": "firebase-adminsdk-fbsvc@pwa-ios-bba82.iam.gserviceaccount.com",
-    "FIREBASE_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nMIIEugIBADANBgkqhkiG9w0BAQEFAASCBKQwggSgAgEAAoIBAQC8cRE+DzXknsSt\n3TH1ijea1TsfKD3B+5pFZ3A0AaPnCMhTKvBa/vlwZNkFCYXFT6Lf2ueGbZYE/1pk\nNJiL7DiPLJ10ZidnSA+Rq/L4bm0WUeOJpJsoHhQqZKTH6J5LHH/iVn/Q2kaWRLL4\newjJem+SirBM1osxFO4m1w4Q2a6smUGd8r2Ikzwh5CXaERDjjrLSlLJKzsPMGM2Z\n4G+nAL6huM09FjQ0wVtM6QVWWiUuappsquCaTaShRKHkVc7duxjHfptpeNMTa3+x\nl25606hxv/RGC3qf4VBMMQcT/kQlymyzF7GTkfVBHC2BWsMOLEOsr12TdpiM3BFC\nZb8XsrwNAgMBAAECgf9J1Gk5zbvPvTGE7QtZDrSHQgPOStxN11+Aa1M92c0Q0UZ4\nHA3cZdZU5frt5LOeGq8CbA59HKWQthTNx2cwN9y91T0OqpD4zI+zaZF7kPtfqbXJ\nHjTfNhzjslep+yzWdAdAWaOHFsrESFlwASq8+LtXlTIXTyqgKd/xiuoRfNGmM7lK\nN3n5NqkMOF3CQ92BCMKGJb3K61i4WchKHytP0JlFwPdJqhfA4RPTmedban0Fs6E1\ntgkcQ72FtXYrbTGnhqfdM/+pkn6iG5GlTqQRd/SNgPE1SkkjkJ8FoJv+uATiHYlo\nr+jHH2Qy7PrLFrdx1RcVDk19uDO1pwcSWT5eebECgYEA3eyiXDd2tmiM6eNTlgEO\nQddv/9GkNTrvJB+hxpZQWY333jBf4+IE+FmuHvLi7N5F1+QRizmniwvnijVYO7gx\nPsmR81nCVwxKspb2P1+Kv1VEVT+otMqZooZR9BkznrWBqdBXjCLIqELvf8tCt2DL\nqOXOBmJpnjU+mJJ2zUACb0UCgYEA2WBNJd9NcOTHwcKXpNJsXrX0zSus4aw5euwR\nltukHeYwHil533bLnyuw/v9dEe4otf9vGp5qPuGNoMygwy3pBzGWOiS3XBwNJINW\nLeSj+B2byyZ2cQVj2zzxHaRzUfi/I463rVCLnNOBuen8tdVS/QE2HeY11UJKrjmQ\nuWQE4ikCgYA43zqgfUo75sEt8ybpiy23K9m06mm1hnvgewa/WKgQuzQpSaZZRQPX\nDUx0+/Oxlii58eWZE1ZfaNaWcaNB8qsUFx4DCh6mpizCZbOHfBmXfOd9HUpDwqPq\npZd9AbRb2NH4zb6R2BwqGrU7v8BCNFkc2H+a3T+J3sVC3k35vYyiLQKBgHeuiOto\nJegZXk41CG8MF/SRdAYenOHnhAJExW5s4dBAc4+3wE0jx/qMALh0+tYrbSi/SXm7\nbL3QS70TzROJTHrUd2Tt4DKLk0TeNu2vrAOosaVJOP8DO7ZyuEJcz817CinWoxR+\ne0/ON+eXh7bJjBaWuyf9Hviatil0slUQV4v5AoGAGVzzjrOU0qIrmK5ZD4DELdBY\nThw6st8QZRwePVL1oemhjPKhyhqBp1vnh8VceqJ4hC89hc5/FBdgdJ5bUU7nu/0z\nB4X41RyYpuPfxAX5Woe6q7e0zYddk52WYb+Re8Dx4TG6caoNGBjnkASmMFF29a4N\nJDc8JtQl49t6PYgL1EQ=\n-----END PRIVATE KEY-----\n",
-    "FIREBASE_DATABASE_URL": "https://console.firebase.google.com/project/pwa-ios-bba82/firestore"
-}
+"headers": [
+    {
+    "source": "/firebase-messaging-sw.js",
+    "headers": [
+        {
+        "key": "Cache-Control",
+        "value": "no-cache"
+        }
+    ]
+    }
+]
 }
