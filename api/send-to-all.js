@@ -1,49 +1,36 @@
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
-import { getMessaging } from 'firebase-admin/messaging';
+import admin from 'firebase-admin';
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
-if (!getApps().length) {
-initializeApp({
-    credential: cert(serviceAccount)
+if (!admin.apps.length) {
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
 });
 }
 
-const db = getFirestore();
-const messaging = getMessaging();
+const db = admin.firestore();
 
 export default async function handler(req, res) {
-if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-}
+if (req.method !== 'POST') return res.status(405).end();
 
 try {
     const snapshot = await db.collection('tokens').get();
-    const tokens = snapshot.docs.map(doc => doc.data().token).filter(Boolean);
+    const tokens = snapshot.docs.map(doc => doc.data().token);
 
-    if (tokens.length === 0) {
-    return res.status(200).json({ message: 'Nenhum token encontrado.' });
-    }
+    if (!tokens.length) return res.status(200).json({ message: 'No tokens' });
 
     const message = {
     notification: {
-        title: 'Lembrete diário',
-        body: 'Hora de se hidratar e revisar seus planos!'
+        title: 'Daily Reminder',
+        body: 'Time to hydrate and check your goals!'
     },
     tokens
     };
 
-    const response = await messaging.sendMulticast(message);
-    res.status(200).json({
-    success: response.successCount,
-    failure: response.failureCount,
-    failedTokens: response.responses
-        .map((r, i) => (!r.success ? tokens[i] : null))
-        .filter(Boolean)
-    });
+    const response = await admin.messaging().sendMulticast(message);
+    res.status(200).json({ success: response.successCount, failure: response.failureCount });
 } catch (err) {
-    console.error('Erro ao enviar notificações:', err);
-    res.status(500).json({ error: 'Erro interno ao enviar notificações.' });
+    console.error('Erro ao enviar notificacoes:', err);
+    res.status(500).json({ error: 'Erro interno ao enviar notificacoes.' });
 }
 }

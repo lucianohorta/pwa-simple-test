@@ -1,48 +1,32 @@
-importScripts('https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.6.11/firebase-messaging-compat.js');
+import admin from 'firebase-admin';
 
-firebase.initializeApp({
-apiKey: "AIzaSyBk_c4KxIWghSZYWiTesJP4Ho9XXdp4XWs",
-authDomain: "pwa-ios-bba82.firebaseapp.com",
-projectId: "pwa-ios-bba82",
-storageBucket: "pwa-ios-bba82.appspot.com",
-messagingSenderId: "894142973830",
-appId: "1:894142973830:web:2f124ebbd5e183b7b58e07"
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
+if (!admin.apps.length) {
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
 });
+}
 
-const messaging = firebase.messaging();
+const db = admin.firestore();
 
-// Push notification handler
-messaging.onBackgroundMessage((payload) => {
-console.log('[firebase-messaging-sw.js] Mensagem em segundo plano recebida:', payload);
+export default async function handler(req, res) {
+if (req.method !== 'POST') return res.status(405).end();
 
-const notificationTitle = payload.notification?.title || 'Lembrete';
-const notificationOptions = {
-    body: payload.notification?.body || 'Você tem um novo lembrete!',
-    icon: '/icon-192.png'
-};
+try {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ error: 'Token missing' });
 
-self.registration.showNotification(notificationTitle, notificationOptions);
-});
+    const tokensRef = db.collection('tokens');
+    const existing = await tokensRef.where('token', '==', token).get();
 
-// Cache básico 
-const CACHE_NAME = 'pwa-lembretes-v1';
-const urlsToCache = [
-'/',
-'/index.html',
-'/style.css',
-'/icon-192.png',
-'/icon-512.png'
-];
+    if (existing.empty) {
+    await tokensRef.add({ token });
+    }
 
-self.addEventListener('install', (event) => {
-event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
-);
-});
-
-self.addEventListener('fetch', (event) => {
-event.respondWith(
-    caches.match(event.request).then((response) => response || fetch(event.request))
-);
-});
+    res.status(200).json({ success: true });
+} catch (err) {
+    console.error('Erro ao salvar token:', err);
+    res.status(500).json({ error: 'Erro ao salvar token' });
+}
+}

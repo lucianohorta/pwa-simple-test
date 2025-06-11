@@ -40,46 +40,33 @@
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
-    if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/firebase-messaging-sw.js')
-        .then(function(registration) {
-        console.log('Service Worker registrado com sucesso', registration);
-
-        document.getElementById('subscribe').addEventListener('click', async () => {
-            try {
-            const permission = await Notification.requestPermission();
-            if (permission === 'granted') {
-                const token = await messaging.getToken({
-                vapidKey: 'BOyQvrJPgC9d-mEncQGz93pEbhB1IghXhgln42SBx3BVhCkO6JwWMA1MSYVdCMRiA_BpspdWvnJDXgeP91o-vNA',
-                serviceWorkerRegistration: registration
-                });
-
-                console.log('Token:', token);
-
-                const res = await fetch('/api/save-token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token })
-                });
-
-                if (res.ok) {
-                alert('Token salvo com sucesso!');
-                } else {
-                alert('Token gerado, mas houve erro ao salvar no servidor.');
-                }
-            } else {
-                alert('Permissão negada.');
-            }
-            } catch (error) {
-            console.error('Erro ao ativar notificações', error);
-            alert('Erro ao ativar notificações');
-            }
-        });
+    self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open('pwa-cache').then(cache => {
+        return cache.addAll([
+            '/',
+            '/index.html',
+            '/style.css',
+            '/icon-192.png',
+            '/icon-512.png'
+        ]);
         })
-        .catch(function(err) {
-        console.error('Erro ao registrar o Service Worker', err);
-        });
-    }
+    );
+    });
+
+    self.addEventListener('fetch', event => {
+    event.respondWith(
+        caches.match(event.request).then(response => response || fetch(event.request))
+    );
+    });
+
+    messaging.onBackgroundMessage(payload => {
+    const { title, body } = payload.notification || {};
+    self.registration.showNotification(title || 'Notification', {
+        body: body || 'You have a new message!',
+        icon: '/icon-192.png'
+    });
+    });
 </script>
 </body>
 </html>
