@@ -24,15 +24,24 @@ try {
     return res.status(400).json({ error: 'Token required' });
     }
 
-    const existing = await db.collection('tokens').where('token', '==', token).get();
-    if (existing.empty) {
-    await db.collection('tokens').add({
-        token,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    // Verifica se o token já existe
+    const existing = await db
+    .collection('tokens')
+    .where('token', '==', token)
+    .limit(1)
+    .get();
+
+    if (!existing.empty) {
+    return res.status(200).json({ success: true, duplicated: true });
     }
 
-    return res.status(200).json({ success: true });
+    // Salva o novo token
+    await db.collection('tokens').add({
+    token,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return res.status(200).json({ success: true, duplicated: false });
 } catch (error) {
     console.error('Erro ao salvar token:', error);
     return res.status(500).json({ error: 'Erro interno ao salvar token.' });
