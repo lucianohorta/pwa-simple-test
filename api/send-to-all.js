@@ -1,5 +1,8 @@
 import admin from 'firebase-admin';
+import { getMessaging } from 'firebase-admin/messaging';
+import { onRequest } from 'firebase-functions/v2/https';
 
+// Ensure Firebase Admin is initialized only once (serverless-safe)
 if (!admin.apps.length) {
 admin.initializeApp({
     credential: admin.credential.cert({
@@ -11,17 +14,20 @@ admin.initializeApp({
 });
 }
 
+const db = admin.firestore();
+const messaging = getMessaging();
+
 export default async function handler(req, res) {
 if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido' });
 }
 
 try {
-    const snapshot = await admin.firestore().collection('tokens').get();
+    const snapshot = await db.collection('tokens').get();
     const tokens = snapshot.docs.map(doc => doc.data().token).filter(Boolean);
 
     if (tokens.length === 0) {
-    return res.status(400).json({ error: 'Nenhum token disponível para notificação.' });
+    return res.status(400).json({ error: 'Nenhum token encontrado.' });
     }
 
     const message = {
@@ -29,13 +35,13 @@ try {
         title: 'Lembrete Diário',
         body: 'Essa é sua notificação push diária!',
     },
-    tokens: tokens,
+    tokens,
     };
 
-    const response = await admin.messaging().sendMulticast(message);
-    res.status(200).json({ success: true, response });
+    const response = await messaging.sendMulticast(message);
+    return res.status(200).json({ success: true, response });
 } catch (error) {
     console.error('Erro ao enviar notificações:', error);
-    res.status(500).json({ error: 'Erro interno ao enviar notificações.' });
+    return res.status(500).json({ error: 'Erro interno ao enviar notificações.' });
 }
 }
