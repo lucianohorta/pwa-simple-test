@@ -2,110 +2,107 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hello World PWA + Push Notifications</title>
-<link rel="manifest" href="/manifest.json" />
-<link rel="icon" href="/icon-192.png" />
-<link rel="apple-touch-icon" href="/icon-192.png" />
-<meta name="theme-color" content="#ffffff" />
-<link rel="stylesheet" href="style.css" />
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="/style.css">
 </head>
-
 <body>
 <h1>Hello World PWA + Push Notifications</h1>
 <button id="subscribe">Enable Push Notification</button>
 <div id="status"></div>
+<p id="show-error" onclick="document.getElementById('error-details').style.display='block'">Show technical details</p>
+<div id="error-details" style="display:none"></div>
 
-<!-- Firebase SDKs -->
+<!-- Firebase SDK -->
 <script src="/config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-messaging-compat.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-    const app = firebase.initializeApp(window.firebaseConfig);
-    const messaging = firebase.messaging();
+    document.addEventListener('DOMContentLoaded', async () => {
     const statusEl = document.getElementById('status');
-    const subscribeBtn = document.getElementById('subscribe');
+    const button = document.getElementById('subscribe');
+    let messaging;
 
-    // Check service worker support
     if (!('serviceWorker' in navigator)) {
-        statusEl.textContent = "Error: Your browser doesn't support service workers";
-        subscribeBtn.disabled = true;
+        statusEl.textContent = "Error: Your browser doesn't support service workers.";
+        button.disabled = true;
         return;
     }
 
-    navigator.serviceWorker.register('/firebase-messaging-sw.js')
-        .then(registration => {
+    // Inicializa Firebase
+    firebase.initializeApp(window.firebaseConfig);
+
+    try {
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
         console.log('Service Worker registered with scope:', registration.scope);
 
-        subscribeBtn.addEventListener('click', async () => {
-            const statusEl = document.getElementById('status');
-            const button = document.getElementById('subscribe');
+        messaging = firebase.messaging();
 
-            try {
+        // Foreground message listener
+        messaging.onMessage(payload => {
+        console.log('Foreground message:', payload);
+        if (payload?.notification) {
+            new Notification(payload.notification.title, {
+            body: payload.notification.body,
+            icon: '/icon-192.png'
+            });
+        }
+        });
+
+        // Botão de subscribe
+        button.addEventListener('click', async () => {
+        try {
             button.disabled = true;
             statusEl.textContent = "Requesting permission...";
 
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') {
-                statusEl.textContent = "Notifications blocked. Please enable permissions in browser settings.";
-                button.disabled = false;
-                return;
+            statusEl.textContent = "Notifications blocked.";
+            button.disabled = false;
+            return;
             }
 
             statusEl.textContent = "Generating token...";
-            await messaging.deleteToken(); // força renovação
             const token = await messaging.getToken({
-                serviceWorkerRegistration: await navigator.serviceWorker.ready,
-                vapidKey: "BOyQvrJPgC9d-mEncQGz93pEbhB1IghXhgln42SBx3BVhCkO6JwWMA1MSYVdCMRiA_BpspdWvnJDXgeP91o-vNA"
+            vapidKey: "BOyQvrJPgC9d-mEncQGz93pEbhB1IghXhgln42SBx3BVhCkO6JwWMA1MSYVdCMRiA_BpspdWvnJDXgeP91o-vNA",
+            serviceWorkerRegistration: registration
             });
 
-            console.log("FCM Token:", token);
+            console.log('FCM Token:', token);
             statusEl.textContent = "Registering device...";
 
             const response = await fetch('/api/save-token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token })
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token })
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `Server responded with status ${response.status}`);
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP ${response.status}`);
             }
 
             statusEl.textContent = "✔ Push notifications enabled!";
             button.textContent = "Notifications Enabled";
             button.disabled = true;
-
-            } catch (error) {
-            console.error("Full error:", error);
-            const errorMessage = error.message || "Failed to enable notifications";
-            statusEl.textContent = `Error: ${errorMessage}`;
-            document.getElementById('error-details').textContent =
-                `Full error: ${JSON.stringify(error, null, 2)}`;
+        } catch (err) {
+            console.error("Full error:", err);
+            statusEl.textContent = "Error: " + (err.message || "Failed to enable notifications");
+            document.getElementById('error-details').textContent = JSON.stringify(err, null, 2);
             button.disabled = false;
-            }
+        }
         });
 
-        // ✅ Show notification manually when app is in foreground
-        messaging.onMessage((payload) => {
-            console.log("Foreground push:", payload);
-            if (Notification.permission === "granted") {
-            new Notification(payload.notification?.title || "Notificação", {
-                body: payload.notification?.body || "",
-                icon: "/icon-192.png",
-            });
-            }
-        });
-
-        })
-        .catch(error => {
-        console.error('Service Worker registration failed:', error);
-        statusEl.textContent = "Error: Failed to register service worker";
-        subscribeBtn.disabled = true;
-        });
+    } catch (err) {
+        console.error('Service Worker registration failed:', err);
+        statusEl.textContent = "Error: Failed to register service worker.";
+        button.disabled = true;
+    }
     });
 </script>
 </body>

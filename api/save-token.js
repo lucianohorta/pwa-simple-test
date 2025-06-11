@@ -24,10 +24,8 @@ try {
     return res.status(400).json({ error: 'Token required' });
     }
 
-    // Salva com o próprio token como ID
     await db.collection('tokens').doc(token).set({
-    token,
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     return res.status(200).json({ success: true });
