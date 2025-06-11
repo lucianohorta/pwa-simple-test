@@ -1,5 +1,6 @@
 import admin from 'firebase-admin';
 
+// Inicializa o Firebase apenas uma vez (compatível com ambiente serverless)
 if (!admin.apps.length) {
 admin.initializeApp({
     credential: admin.credential.cert({
@@ -26,16 +27,26 @@ try {
     return res.status(400).json({ error: 'Nenhum token encontrado.' });
     }
 
-    const message = {
+    const messagePayload = {
     notification: {
         title: 'Lembrete Diário',
         body: 'Essa é sua notificação push diária!',
-    },
-    tokens,
+    }
     };
 
-    const response = await admin.messaging().sendMulticast(message);
-    return res.status(200).json({ success: true, response });
+    const responses = await Promise.all(
+    tokens.map(token =>
+        admin.messaging().send({
+        ...messagePayload,
+        token
+        })
+    )
+    );
+
+    return res.status(200).json({
+    success: true,
+    sent: responses.length
+    });
 } catch (error) {
     console.error('Erro ao enviar notificações:', error);
     return res.status(500).json({ error: 'Erro interno ao enviar notificações.' });
