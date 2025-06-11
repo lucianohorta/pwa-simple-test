@@ -16,7 +16,7 @@ appId: "1:894142973830:web:2f124ebbd5e183b7b58e07"
 const messaging = firebase.messaging();
 
 // Caching básico
-const CACHE_NAME = 'pwa-lembretes-v1';
+const CACHE_NAME = 'pwa-cache';
 const urlsToCache = [
 '/',
 '/index.html',

@@ -1,11 +1,13 @@
 {
   "name": "Hello PWA with Push",
   "short_name": "PWA Push",
-  "start_url": "/",
+  "start_url": "/index.html",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "description": "Hello World PWA + Push Notifications",
+  "gcm_sender_id": "894142973830",
   "icons": [
     {
       "src": "/icon-192.png",

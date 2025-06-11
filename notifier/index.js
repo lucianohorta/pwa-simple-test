@@ -10,25 +10,27 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const serviceAccount = JSON.parse(
-    readFileSync(path.join(__dirname, 'service-account.json'), 'utf-8')
+readFileSync(path.join(__dirname, 'service-account.json'), 'utf-8')
 );
 
-const app = express();
-const port = 3000;
-
-
-
 admin.initializeApp({
-credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount),
+    apiKey: "AIzaSyBk_c4KxIWghSZYWiTesJP4Ho9XXdp4XWs",
+    authDomain: "pwa-ios-bba82.firebaseapp.com",
+    projectId: "pwa-ios-bba82",
+    storageBucket: "pwa-ios-bba82.appspot.com",
+    messagingSenderId: "894142973830",
+    appId: "1:894142973830:web:2f124ebbd5e183b7b58e07",
 });
 
 const db = admin.firestore();
 
-// Middleware
+const app = express();
+const port = 3000;
+
 app.use(cors());
 app.use(bodyParser.json());
 
-// Rota para salvar token
 app.post('/api/save-token', async (req, res) => {
 const { token } = req.body;
 
