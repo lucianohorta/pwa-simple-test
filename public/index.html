@@ -52,54 +52,50 @@
             // Modified button handler with full error handling
             subscribeBtn.addEventListener('click', async () => {
                 try {
-                subscribeBtn.disabled = true;
-                statusEl.textContent = "Requesting permission...";
-                
-                // Request notification permission
-                const permission = await Notification.requestPermission();
-                
-                if (permission !== 'granted') {
-                    statusEl.textContent = "Notification permission denied";
-                    subscribeBtn.disabled = false;
-                    return;
-                }
-                
-                statusEl.textContent = "Generating token...";
-                
-                // Get FCM token
-                const token = await messaging.getToken({
-                    serviceWorkerRegistration: registration,
-                    vapidKey: "BOyQvrJPgC9d-mEncQGz93pEbhB1IghXhgln42SBx3BVhCkO6JwWMA1MSYVdCMRiA_BpspdWvnJDXgeP91o-vNA"
-                });
-                
-                console.log('FCM Token:', token);
-                statusEl.textContent = "Token generated! Saving...";
-                
-                // Send token to backend
-                const response = await fetch('/api/save-token', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token })
-                });
-                
-                if (!response.ok) throw new Error('Failed to save token');
-                
-                statusEl.textContent = "✔ Push notifications enabled!";
-                subscribeBtn.textContent = "Notifications Enabled";
-                
-                // Listen for new messages
-                messaging.onMessage(payload => {
-                    console.log('Foreground message:', payload);
-                    new Notification(payload.notification?.title || 'New message', {
-                    body: payload.notification?.body || 'You have a new notification',
-                    icon: '/icon-192.png'
+                    subscribeBtn.disabled = true;
+                    statusEl.textContent = "Requesting permission...";
+                    
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') {
+                        statusEl.textContent = "Notifications blocked";
+                        subscribeBtn.disabled = false;
+                        return;
+                    }
+                    
+                    statusEl.textContent = "Generating token...";
+                    const token = await messaging.getToken({
+                        serviceWorkerRegistration: registration,
+                        vapidKey: "BOyQvrJPgC9d-mEncQGz93pEbhB1IghXhgln42SBx3BVhCkO6JwWMA1MSYVdCMRiA_BpspdWvnJDXgeP91o-vNA"
                     });
-                });
-                
+                    
+                    console.log("FCM Token:", token);
+                    statusEl.textContent = "Saving token...";
+                    
+                    try {
+                    const response = await fetch('/api/save-token', {
+                        method: 'POST',
+                        headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ token })
+                    });
+                    
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Failed to save');
+                    
+                    statusEl.textContent = "✔ Ready for notifications!";
+                    subscribeBtn.textContent = "Enabled";
+                    } catch (fetchError) {
+                        console.error("Save token error:", fetchError);
+                        statusEl.textContent = `Error: ${fetchError.message}`;
+                        subscribeBtn.disabled = false;
+                    }
+                    
                 } catch (error) {
-                console.error('Push notification error:', error);
-                statusEl.textContent = `Error: ${error.message}`;
-                subscribeBtn.disabled = false;
+                    console.error("Notification error:", error);
+                    statusEl.textContent = `Error: ${error.message}`;
+                    subscribeBtn.disabled = false;
                 }
             });
             
