@@ -34,19 +34,3 @@ button {
   min-height: 20px;
   color: #333;
 }
-#error-details {
-  display: none;
-  background: #ffeeee;
-  padding: 10px;
-  margin-top: 10px;
-  border-radius: 4px;
-  font-family: monospace;
-  font-size: 12px;
-}
-
-#show-error {
-  color: blue;
-  text-decoration: underline;
-  cursor: pointer;
-  font-size: 12px;
-}

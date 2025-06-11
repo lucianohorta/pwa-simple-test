@@ -1,6 +1,6 @@
 {
   "name": "Hello PWA with Push",
-  "short_name": "PWA Push",
+  "short_name": "Mock App",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
