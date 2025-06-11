@@ -4,12 +4,12 @@ importScripts('https://www.gstatic.com/firebasejs/9.6.11/firebase-messaging-comp
 
 // Inicializa o Firebase no Service Worker
 firebase.initializeApp({
-apiKey: "AIzaSyBk_c4KxIWghSZYWiTesJP4Ho9XXdp4XWs",
-authDomain: "pwa-ios-bba82.firebaseapp.com",
-projectId: "pwa-ios-bba82",
-storageBucket: "pwa-ios-bba82.appspot.com",
-messagingSenderId: "894142973830",
-appId: "1:894142973830:web:2f124ebbd5e183b7b58e07"
+    apiKey: "AIzaSyBk_c4KxIWghSZYWiTesJP4Ho9XXdp4XWs",
+    authDomain: "pwa-ios-bba82.firebaseapp.com",
+    projectId: "pwa-ios-bba82",
+    storageBucket: "pwa-ios-bba82.appspot.com",
+    messagingSenderId: "894142973830",
+    appId: "1:894142973830:web:2f124ebbd5e183b7b58e07"
 });
 
 // Inicializa o Firebase Messaging
@@ -40,13 +40,13 @@ event.respondWith(
 
 // Gerencia mensagens push recebidas em background
 messaging.onBackgroundMessage(payload => {
-console.log('[firebase-messaging-sw.js] Mensagem recebida em segundo plano:', payload);
+    console.log('[firebase-messaging-sw.js] Mensagem recebida em segundo plano:', payload);
 
-const notificationTitle = payload.notification?.title || 'Lembrete';
-const notificationOptions = {
-    body: payload.notification?.body || 'Você tem um novo lembrete!',
-    icon: '/icon-192.png'
-};
+    const notificationTitle = payload.notification?.title || 'Lembrete';
+    const notificationOptions = {
+        body: payload.notification?.body || 'Você tem um novo lembrete!',
+        icon: '/icon-192.png'
+    };
 
-return self.registration.showNotification(notificationTitle, notificationOptions);
+    self.registration.showNotification(notificationTitle, notificationOptions);
 });
