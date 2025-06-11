@@ -1,8 +1,8 @@
-// Importa os scripts do Firebase necessários
+// Import Firebase scripts
 importScripts('https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.6.11/firebase-messaging-compat.js');
 
-// Inicializa o Firebase no Service Worker
+// Initialize Firebase
 firebase.initializeApp({
     apiKey: "AIzaSyBk_c4KxIWghSZYWiTesJP4Ho9XXdp4XWs",
     authDomain: "pwa-ios-bba82.firebaseapp.com",
@@ -12,41 +12,59 @@ firebase.initializeApp({
     appId: "1:894142973830:web:2f124ebbd5e183b7b58e07"
 });
 
-// Inicializa o Firebase Messaging
 const messaging = firebase.messaging();
 
-// Caching básico
-const CACHE_NAME = 'pwa-cache';
+// Cache name and URLs to cache
+const CACHE_NAME = 'pwa-cache-v1';
 const urlsToCache = [
 '/',
 '/index.html',
 '/style.css',
 '/icon-192.png',
-'/icon-512.png'
+'/icon-512.png',
+'/manifest.json'
 ];
 
-self.addEventListener('install', event => {
+// Install service worker and cache assets
+self.addEventListener('install', (event) => {
 event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME)
+    .then((cache) => cache.addAll(urlsToCache))
 );
 });
 
-// Intercepta fetch para usar cache quando disponível
-self.addEventListener('fetch', event => {
+// Fetch from cache when available
+self.addEventListener('fetch', (event) => {
 event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    caches.match(event.request)
+    .then((response) => response || fetch(event.request))
 );
 });
 
-// Gerencia mensagens push recebidas em background
-messaging.onBackgroundMessage(payload => {
-    console.log('[firebase-messaging-sw.js] Mensagem recebida em segundo plano:', payload);
+// Handle background messages
+messaging.onBackgroundMessage((payload) => {
+console.log('[firebase-messaging-sw.js] Received background message:', payload);
 
-    const notificationTitle = payload.notification?.title || 'Lembrete';
-    const notificationOptions = {
-        body: payload.notification?.body || 'Você tem um novo lembrete!',
-        icon: '/icon-192.png'
-    };
+const notificationTitle = payload.notification?.title || 'New notification';
+const notificationOptions = {
+    body: payload.notification?.body || 'You have a new message',
+    icon: '/icon-192.png',
+    data: payload.data || {}
+};
 
-    self.registration.showNotification(notificationTitle, notificationOptions);
+return self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// Notification click handler
+self.addEventListener('notificationclick', (event) => {
+event.notification.close();
+event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+    .then((clientList) => {
+        if (clientList.length > 0) {
+        return clientList[0].focus();
+        }
+        return clients.openWindow('/');
+    })
+);
 });

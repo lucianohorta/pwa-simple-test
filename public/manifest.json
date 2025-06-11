@@ -1,23 +1,28 @@
 {
   "name": "Hello PWA with Push",
   "short_name": "PWA Push",
-  "start_url": "/index.html",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#ffffff",
-  "description": "Hello World PWA + Push Notifications",
+  "theme_color": "#4285f4",
+  "description": "A PWA with push notifications",
   "gcm_sender_id": "894142973830",
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "orientation": "portrait-primary"
 }

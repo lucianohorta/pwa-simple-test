@@ -1,20 +1,25 @@
 {
-"cleanUrls": true,
-"rewrites": [
-    {
-    "source": "/firebase-messaging-sw.js",
-    "destination": "/firebase-messaging-sw.js"
-    }
-],
-"headers": [
-    {
-    "source": "/(.*)",
+    "version": 2,
+    "cleanUrls": true,
+    "rewrites": [
+        {
+        "source": "/firebase-messaging-sw.js",
+        "destination": "/firebase-messaging-sw.js"
+        }
+    ],
     "headers": [
         {
-        "key": "Content-Security-Policy",
-        "value": "default-src 'self'; script-src 'self' https://www.gstatic.com https://www.googleapis.com; object-src 'none'; connect-src 'self' https://fcm.googleapis.com https://firebase.googleapis.com"
+        "source": "/(.*)",
+        "headers": [
+            {
+            "key": "Service-Worker-Allowed",
+            "value": "/"
+            },
+            {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://fcm.googleapis.com https://firebase.googleapis.com https://firestore.googleapis.com; object-src 'none'; frame-src 'none'"
+            }
+        ]
         }
     ]
-    }
-]
 }

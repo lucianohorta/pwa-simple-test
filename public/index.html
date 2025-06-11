@@ -21,6 +21,7 @@
 <body>
 <h1>Hello World PWA + Push Notifications</h1>
 <button id="subscribe">Enable Push Notification</button>
+<div id="status"></div>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
@@ -34,55 +35,67 @@
         storageBucket: "pwa-ios-bba82.firebasestorage.app",
         messagingSenderId: "894142973830",
         appId: "1:894142973830:web:2f124ebbd5e183b7b58e07",
-        measurementId: "G-5R46BB6M38",
-        heartbeat: {
-            enabled: false,
-        },
+        measurementId: "G-5R46BB6M38"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
-    self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open('pwa-cache').then(cache => {
-        return cache.addAll([
-            '/',
-            '/index.html',
-            '/style.css',
-            '/icon-192.png',
-            '/icon-512.png'
-        ]);
-        })
-    );
-    });
-
-    self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request).then(response => response || fetch(event.request))
-    );
-    });
-
-    messaging.onMessage(payload => {
-        console.log('[index.html] Received foreground message ', payload);
-        // Customize notification here
-        const notificationTitle = payload.notification?.title || 'Lembrete';
-        const notificationOptions = {
-        body: payload.notification?.body || 'Você tem um novo lembrete!',
-        icon: '/icon-192.png'
-        };
-
-        new Notification(notificationTitle, notificationOptions);
-    });
-
-    if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('firebase-messaging-sw.js')
-        .then(registration => {
-            console.log('Service worker registered:', registration);
-        })
-        .catch(error => {
-            console.error('Error registering service worker:', error);
+    // Handle push subscription
+    document.getElementById('subscribe').addEventListener('click', async () => {
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+        const token = await messaging.getToken();
+        document.getElementById('status').textContent = 'Registering device...';
+        
+        // Send token to backend
+        const response = await fetch('/api/save-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token })
         });
+        
+        if (response.ok) {
+            document.getElementById('status').textContent = 'Push notifications enabled!';
+        } else {
+            document.getElementById('status').textContent = 'Failed to register device';
+        }
+        } else {
+        document.getElementById('status').textContent = 'Notification permission denied';
+        }
+    } catch (error) {
+        console.error('Error enabling push notifications:', error);
+        document.getElementById('status').textContent = 'Error: ' + error.message;
+    }
+    });
+
+    // Handle foreground messages
+    messaging.onMessage((payload) => {
+    console.log('Message received in foreground:', payload);
+    const notificationTitle = payload.notification?.title || 'New message';
+    const notificationOptions = {
+        body: payload.notification?.body || 'You have a new notification',
+        icon: '/icon-192.png'
+    };
+    
+    if (Notification.permission === 'granted') {
+        new Notification(notificationTitle, notificationOptions);
+    }
+    });
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        .then((registration) => {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        })
+        .catch((err) => {
+            console.error('ServiceWorker registration failed: ', err);
+        });
+    });
     }
 </script>
 </body>

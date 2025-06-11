@@ -9,53 +9,90 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Initialize Firebase Admin
 const serviceAccount = JSON.parse(
 readFileSync(path.join(__dirname, 'service-account.json'), 'utf-8')
 );
 
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    apiKey: "AIzaSyBk_c4KxIWghSZYWiTesJP4Ho9XXdp4XWs",
-    authDomain: "pwa-ios-bba82.firebaseapp.com",
-    projectId: "pwa-ios-bba82",
-    storageBucket: "pwa-ios-bba82.firebasestorage.app",
-    messagingSenderId: "894142973830",
-    appId: "1:894142973830:web:2f124ebbd5e183b7b58e07",
+credential: admin.credential.cert(serviceAccount),
+databaseURL: `https://pwa-ios-bba82.firebaseio.com`
 });
 
 const db = admin.firestore();
 
+// Create Express app
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
+// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
+// API Endpoints
 app.post('/api/save-token', async (req, res) => {
 const { token } = req.body;
 
 if (!token) {
-    return res.status(400).json({ error: 'Token obrigatório' });
+    return res.status(400).json({ error: 'Token is required' });
 }
 
 try {
-    const ref = db.collection('tokens');
-    const exists = await ref.where('token', '==', token).get();
+    const tokensRef = db.collection('tokens');
+    const existing = await tokensRef.where('token', '==', token).get();
 
-    if (exists.empty) {
-    await ref.add({ token });
-    console.log('Token salvo:', token);
+    if (existing.empty) {
+    await tokensRef.add({ 
+        token,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        platform: req.headers['user-agent'] || 'unknown'
+    });
+    console.log('New token saved:', token);
     } else {
-    console.log('Token já existente:', token);
+    console.log('Token already exists:', token);
     }
 
     res.status(200).json({ success: true });
 } catch (err) {
-    console.error('Erro ao salvar token:', err);
-    res.status(500).json({ error: 'Erro interno' });
+    console.error('Error saving token:', err);
+    res.status(500).json({ error: 'Internal server error' });
 }
 });
 
+app.post('/api/send-to-all', async (req, res) => {
+try {
+    const { title, body } = req.body;
+    
+    if (!title || !body) {
+    return res.status(400).json({ error: 'Title and body are required' });
+    }
+
+    const snapshot = await db.collection('tokens').get();
+    const tokens = snapshot.docs.map(doc => doc.data().token);
+
+    if (tokens.length === 0) {
+    return res.status(200).json({ message: 'No devices registered' });
+    }
+
+    const message = {
+    notification: { title, body },
+    tokens
+    };
+
+    const response = await admin.messaging().sendMulticast(message);
+    
+    res.status(200).json({ 
+    success: response.successCount, 
+    failure: response.failureCount,
+    responses: response.responses
+    });
+} catch (err) {
+    console.error('Error sending notifications:', err);
+    res.status(500).json({ error: 'Internal server error' });
+}
+});
+
+// Start server
 app.listen(port, () => {
-console.log(`✅ Servidor rodando em http://localhost:${port}`);
+console.log(`✅ Server running on http://localhost:${port}`);
 });
