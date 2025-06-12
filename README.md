@@ -4,8 +4,10 @@ A simple **Progressive Web App (PWA)** built with Firebase Cloud Messaging to de
 
 https://pwa-simple-test.vercel.app/
 
-![App Screenshot](https://github.com/lucianohorta/pwa-simple-test/blob/master/1.png?raw=true)
-![App Screenshot](https://github.com/lucianohorta/pwa-simple-test/blob/master/2.png?raw=true)
+<p align="center">
+  <img src="https://github.com/lucianohorta/pwa-simple-test/blob/master/1.png?raw=true" width="45%" />
+  <img src="https://github.com/lucianohorta/pwa-simple-test/blob/master/2.png?raw=true" width="45%" />
+</p>
 
 ### How to Use
 
