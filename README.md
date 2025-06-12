@@ -1,12 +1,13 @@
 ## 📲 PWA Push Notification Demo
 
+This project is a simple **Progressive Web App (PWA)** that demonstrates real push notifications.
+
 https://pwa-simple-test.vercel.app/
 
 ![App Screenshot](https://github.com/lucianohorta/pwa-simple-test/blob/master/1.png?raw=true)
 ![App Screenshot](https://github.com/lucianohorta/pwa-simple-test/blob/master/2.png?raw=true)
 
 
-This project is a simple **Progressive Web App (PWA)** that demonstrates real push notifications.
 
 ### How to Use
 
